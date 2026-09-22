@@ -1,5 +1,7 @@
 # Munchkin Calculator — Adventure Time edition
 
+**Live:** https://munchkincalcmtp.vercel.app/
+
 Table-side tracker for **Munchkin Adventure Time** (Steve Jackson Games / USAopoly). Tracks 2–6 players and works out each one's combat strength against the monsters on the table.
 
 **Combat strength** = Level + Gear + Allies + Character + Class + One‑shots − Curses
