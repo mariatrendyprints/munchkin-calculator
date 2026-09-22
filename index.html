@@ -1,0 +1,964 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Munchkin Calculator</title>
+<meta name="description" content="Adventure Time edition Munchkin level and combat strength tracker for 2-6 players.">
+<style>[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Fredoka:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    /* Land of Ooo, daytime */
+    --sky-top: #8FD4F5;
+    --sky-bottom: #D9F1FB;
+    --grass: #7DC242;
+    --grass-deep: #4E9A2B;
+    --cloud: #FFFFFF;
+    --card: #FFFDF6;
+    --card-head: #FFF3C9;
+    --ink: #1F2440;
+    --ink-soft: #55597A;
+    --outline: #1F2440;
+    --shadow: #1F2440;
+    --jake: #F5A524;         /* accent: Jake orange */
+    --jake-ink: #1F2440;
+    --finn: #4DA3E8;         /* secondary: Finn blue */
+    --finn-ink: #FFFFFF;
+    --gum: #F58AC6;          /* Bubblegum pink */
+    --gum-ink: #1F2440;
+    --bmo: #6FD3B8;          /* BMO teal */
+    --gold: #FFD23F;
+    --gold-ink: #1F2440;
+    --lumpy: #A96BD9;        /* Lumpy Space purple – curses */
+    --red: #E2503F;
+    --red-ink: #FFFFFF;
+    --green: #5FB543;
+    --green-ink: #FFFFFF;
+    --field: #EEF6FB;
+    --focus: #1F5FD1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0F1436;
+      --sky-bottom: #232B63;
+      --grass: #2E5E3A;
+      --grass-deep: #1D4029;
+      --cloud: #2B3468;
+      --card: #1E2450;
+      --card-head: #2A3168;
+      --ink: #F2EEFF;
+      --ink-soft: #B7B3D6;
+      --outline: #E9E4FF;
+      --shadow: #080B24;
+      --jake: #FFB340;
+      --jake-ink: #1F2440;
+      --finn: #6DB6F5;
+      --finn-ink: #0F1436;
+      --gum: #FF9BD3;
+      --gum-ink: #1F2440;
+      --bmo: #7EE0C5;
+      --gold: #FFD75A;
+      --gold-ink: #1F2440;
+      --lumpy: #C79BF0;
+      --red: #F0655A;
+      --red-ink: #FFFFFF;
+      --green: #6FCB55;
+      --green-ink: #0F1436;
+      --field: #2C3470;
+      --focus: #8FC2FF;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0F1436;
+    --sky-bottom: #232B63;
+    --grass: #2E5E3A;
+    --grass-deep: #1D4029;
+    --cloud: #2B3468;
+    --card: #1E2450;
+    --card-head: #2A3168;
+    --ink: #F2EEFF;
+    --ink-soft: #B7B3D6;
+    --outline: #E9E4FF;
+    --shadow: #080B24;
+    --jake: #FFB340;
+    --jake-ink: #1F2440;
+    --finn: #6DB6F5;
+    --finn-ink: #0F1436;
+    --gum: #FF9BD3;
+    --gum-ink: #1F2440;
+    --bmo: #7EE0C5;
+    --gold: #FFD75A;
+    --gold-ink: #1F2440;
+    --lumpy: #C79BF0;
+    --red: #F0655A;
+    --red-ink: #FFFFFF;
+    --green: #6FCB55;
+    --green-ink: #0F1436;
+    --field: #2C3470;
+    --focus: #8FC2FF;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--sky-bottom); }
+  body {
+    margin: 0;
+    position: relative;
+    background: linear-gradient(180deg, var(--sky-top) 0, var(--sky-bottom) 55%, var(--sky-bottom) 100%) fixed;
+    color: var(--ink);
+    font-family: "Fredoka", "Segoe UI", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+    padding-inline: 20px;
+    padding-block: 24px 110px;
+    min-height: 100vh;
+  }
+  /* rolling hills of Ooo */
+  body::after {
+    content: ""; position: fixed; left: 0; right: 0; bottom: 0; height: 70px; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(60% 120px at 18% 100%, var(--grass) 60%, transparent 61%),
+      radial-gradient(45% 100px at 55% 100%, var(--grass-deep) 60%, transparent 61%),
+      radial-gradient(70% 130px at 88% 100%, var(--grass) 60%, transparent 61%),
+      linear-gradient(var(--grass-deep), var(--grass-deep));
+    background-repeat: no-repeat;
+    background-size: 100% 100%, 100% 100%, 100% 100%, 100% 22px;
+    background-position: 0 0, 0 0, 0 0, 0 100%;
+    border-top: 0;
+  }
+  /* clouds */
+  .cloud { position: fixed; z-index: 0; pointer-events: none; width: 140px; height: 44px; background: var(--cloud); border-radius: 40px; opacity: 0.85; }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: var(--cloud); border-radius: 50%; }
+  .cloud::before { width: 60px; height: 60px; left: 22px; top: -30px; }
+  .cloud::after  { width: 44px; height: 44px; left: 72px; top: -18px; }
+  .cloud.a { top: 70px; right: 6%; }
+  .cloud.b { top: 190px; left: 3%; transform: scale(0.7); }
+  @media (max-width: 720px) { .cloud { display: none; } }
+
+  .app { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+
+  /* ---------- Header ---------- */
+  .top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 28px; }
+  .eyebrow {
+    display: inline-block; margin: 0 0 6px 2px;
+    font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif;
+    font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--gum-ink); background: var(--gum);
+    border: 3px solid var(--outline); border-radius: 999px; padding: 6px 12px 3px;
+    box-shadow: 3px 3px 0 var(--shadow); transform: rotate(-2deg);
+  }
+  h1 {
+    font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif;
+    font-weight: 400;
+    font-size: clamp(42px, 7vw, 68px);
+    letter-spacing: 0.02em;
+    line-height: 0.95;
+    margin: 0;
+    color: var(--jake);
+    text-wrap: balance;
+    -webkit-text-stroke: 2px var(--outline);
+    paint-order: stroke fill;
+    text-shadow: 4px 4px 0 var(--shadow);
+  }
+  h1 em { font-style: normal; color: var(--finn); }
+  .tagline { margin: 8px 0 0; color: var(--ink-soft); font-size: 14px; max-width: 50ch; font-weight: 500; }
+  .tagline b { color: var(--ink); font-weight: 700; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .count {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--card); border: 3px solid var(--outline); box-shadow: 4px 4px 0 var(--shadow);
+    padding: 4px 6px 4px 12px; border-radius: 14px;
+  }
+  .count .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .count .val { font-weight: 700; font-size: 20px; min-width: 1.4ch; text-align: center; font-variant-numeric: tabular-nums; }
+
+  .btn {
+    font: inherit; font-weight: 700; font-size: 14px; letter-spacing: 0.03em; text-transform: uppercase;
+    background: var(--card); color: var(--ink);
+    border: 3px solid var(--outline); border-radius: 14px; box-shadow: 4px 4px 0 var(--shadow);
+    padding: 10px 14px; cursor: pointer; line-height: 1;
+    transition: transform 80ms ease, box-shadow 80ms ease;
+  }
+  .btn:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--shadow); }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--shadow); }
+  .btn.jake { background: var(--jake); color: var(--jake-ink); }
+  .btn.red { background: var(--red); color: var(--red-ink); }
+  .btn.red.armed { background: var(--gold); color: var(--gold-ink); }
+  .btn.small { font-size: 12px; padding: 7px 10px; box-shadow: 3px 3px 0 var(--shadow); border-radius: 10px; }
+  .btn:focus-visible, .step:focus-visible, .name:focus-visible, .txt:focus-visible, .sel:focus-visible, .x:focus-visible, .chk input:focus-visible {
+    outline: 3px solid var(--focus); outline-offset: 2px;
+  }
+
+  .step {
+    font: inherit; font-weight: 700; font-size: 18px; line-height: 1;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--outline); background: var(--card); color: var(--ink);
+    cursor: pointer; display: inline-grid; place-items: center; padding: 0;
+    transition: transform 60ms ease;
+  }
+  .step:active { transform: scale(0.9); }
+  .step:disabled { opacity: 0.35; cursor: not-allowed; }
+  .step.plus { background: var(--green); color: var(--green-ink); }
+  .step.minus { background: var(--red); color: var(--red-ink); }
+
+  /* ---------- Player grid ---------- */
+  .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 3px solid var(--outline); border-radius: 18px;
+    box-shadow: 7px 7px 0 var(--shadow);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .card.leader { box-shadow: 7px 7px 0 var(--finn), 7px 7px 0 3px var(--shadow); }
+  .card.winner { border-color: var(--gold); box-shadow: 7px 7px 0 var(--gold), 7px 7px 0 3px var(--shadow); }
+
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-bottom: 3px solid var(--outline);
+    background: var(--card-head);
+  }
+  .name {
+    flex: 1; min-width: 0;
+    font: inherit; font-weight: 700; font-size: 18px;
+    background: transparent; border: 0; border-bottom: 2px dashed color-mix(in srgb, var(--ink) 35%, transparent);
+    color: var(--ink); padding: 2px 0; border-radius: 0;
+  }
+  .name::placeholder, .txt::placeholder { color: color-mix(in srgb, var(--ink-soft) 70%, transparent); }
+  .pill {
+    font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif;
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px 2px; border-radius: 999px; border: 2px solid var(--outline);
+    background: var(--finn); color: var(--finn-ink); white-space: nowrap;
+  }
+  .pill[hidden] { display: none; }
+  .card.winner .pill { background: var(--gold); color: var(--gold-ink); }
+
+  .total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 16px 4px; }
+  .total .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
+  .total .num {
+    font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif;
+    font-size: 72px; line-height: 0.9; letter-spacing: 0.02em;
+    color: var(--jake);
+    -webkit-text-stroke: 2px var(--outline);
+    paint-order: stroke fill;
+    text-shadow: 3px 3px 0 var(--shadow);
+    font-variant-numeric: tabular-nums;
+    min-width: 2ch; text-align: right;
+  }
+  .card.winner .total .num { color: var(--gold); }
+  .breakdown {
+    padding: 0 16px 10px; font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums;
+    display: flex; flex-wrap: wrap; gap: 4px 10px; font-weight: 500;
+  }
+  .breakdown span b { color: var(--ink); font-weight: 700; }
+  .breakdown span.neg b { color: var(--red); }
+  @media (prefers-reduced-motion: no-preference) {
+    .num.bump { animation: bump 220ms ease-out; }
+    @keyframes bump { 40% { transform: scale(1.14); } }
+  }
+
+  /* ---------- Sections & rows ---------- */
+  .sec { border-top: 3px solid var(--outline); padding: 10px 16px 12px; display: flex; flex-direction: column; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding-bottom: 4px; }
+  .sec-title { font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+  .sec-sum { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .sec-sum.neg { color: var(--red); }
+  .sec.curses .sec-title { color: var(--lumpy); }
+  .sec.allies .sec-title { color: var(--bmo); }
+
+  .row {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px;
+    padding: 7px 0;
+    border-top: 2px dotted color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+  .sec > .row:first-child, .sec-head + .row { border-top: 0; }
+  .row .k { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row .k small { font-weight: 500; font-size: 12px; color: var(--ink-soft); }
+  .row.level .k { font-size: 15px; }
+  .row .k .slot { color: var(--ink-soft); font-weight: 500; font-size: 12px; }
+  .row.off .stepper, .row.off .txt, .row.off .sel, .row.off .note, .row.off .k > :not(.sw) { opacity: 0.45; }
+  .row.off .txt { text-decoration: line-through; }
+
+  /* on/off switch for conditional items */
+  .sw { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+  .sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .sw-track {
+    width: 34px; height: 18px; border-radius: 999px; border: 2px solid var(--outline); background: var(--field); position: relative;
+    transition: background 120ms ease;
+  }
+  .sw-track::after {
+    content: ""; position: absolute; top: 1px; left: 1px; width: 12px; height: 12px; border-radius: 50%;
+    background: var(--outline); transition: transform 120ms ease;
+  }
+  .sw input:checked + .sw-track { background: var(--green); }
+  .sw input:checked + .sw-track::after { transform: translateX(16px); background: #fff; }
+  .sw input:focus-visible + .sw-track { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .sw-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); min-width: 2.2em; }
+  @media (prefers-reduced-motion: reduce) { .sw-track, .sw-track::after { transition: none; } }
+  .txt {
+    grid-column: 1; min-width: 0; width: 100%;
+    font: inherit; font-size: 13px; font-weight: 500; color: var(--ink);
+    background: transparent; border: 0; padding: 1px 0; border-radius: 0;
+    border-bottom: 2px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+  }
+  .txt:disabled { opacity: 0.5; }
+  .stepper { grid-column: 2; grid-row: 1 / span 2; display: inline-flex; align-items: center; gap: 5px; }
+  .row.single .stepper { grid-row: 1; }
+  .stepper .v {
+    font-weight: 700; font-size: 20px; min-width: 2.4ch; text-align: center;
+    font-variant-numeric: tabular-nums;
+    background: var(--field); border-radius: 8px; padding: 2px 4px;
+  }
+  .row.level .stepper .v { font-size: 26px; }
+  .row.level.max .stepper .v { background: var(--gold); color: var(--gold-ink); }
+  .sec.curses .stepper .v { color: var(--lumpy); }
+
+  .chk { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); cursor: pointer; }
+  .chk input { accent-color: var(--jake); margin: 0; width: 15px; height: 15px; }
+
+  .x {
+    font: inherit; font-weight: 700; font-size: 13px; line-height: 1;
+    width: 22px; height: 22px; border-radius: 50%; padding: 0;
+    border: 2px solid var(--outline); background: transparent; color: var(--ink); cursor: pointer;
+  }
+  .x:hover { background: var(--red); color: var(--red-ink); }
+
+  .sel {
+    grid-column: 1; min-width: 0; max-width: 100%;
+    font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+    background: var(--field); border: 2px solid var(--outline); border-radius: 10px; padding: 5px 8px;
+  }
+  .note { grid-column: 1 / -1; font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+  .note:empty { display: none; }
+
+  .level-track { display: flex; gap: 3px; padding: 0 16px 14px; }
+  .level-track i { flex: 1; height: 9px; border: 2px solid var(--outline); border-radius: 999px; background: var(--field); }
+  .level-track i.on { background: var(--jake); }
+  .card.winner .level-track i.on { background: var(--gold); }
+
+  /* ---------- The fight (monsters) ---------- */
+  .fight {
+    background: var(--card); border: 3px solid var(--outline); border-radius: 18px; box-shadow: 7px 7px 0 var(--shadow);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .fight-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+    padding: 12px 16px; border-bottom: 3px solid var(--outline); background: var(--card-head);
+  }
+  .fight-head .sec-title { font-size: 15px; color: var(--ink); }
+  .fight-head .sub { font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+  .fight-total { display: flex; align-items: baseline; gap: 10px; }
+  .fight-total .lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); }
+  .fight-total .num {
+    font-family: "Luckiest Guy", "Impact", "Arial Black", sans-serif; font-size: 44px; line-height: 0.9;
+    color: var(--red); -webkit-text-stroke: 2px var(--outline); paint-order: stroke fill; text-shadow: 3px 3px 0 var(--shadow);
+    font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right;
+  }
+  .monsters { display: flex; flex-direction: column; padding: 4px 16px 12px; }
+  .monster {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px 14px;
+    padding: 10px 0; border-top: 2px dotted color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+  .monster:first-child { border-top: 0; }
+  .monster .who { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .monster .who .k { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .monster .txt { grid-column: auto; }
+  .monster .part { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .monster .part .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  .monster .mtotal { font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: right; color: var(--red); }
+  @media (max-width: 640px) {
+    .monster { grid-template-columns: 1fr 1fr; }
+    .monster .who { grid-column: 1 / -1; }
+    .monster .part.total { grid-column: 1 / -1; flex-direction: row; justify-content: flex-end; gap: 8px; }
+  }
+  .monsters-empty { padding: 14px 0 6px; font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+  .fight-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px 14px; }
+
+  /* result vs monster on each player card */
+  .vs {
+    margin: 0 16px 10px; padding: 6px 10px; border-radius: 10px; border: 2px solid var(--outline);
+    font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; align-items: center;
+  }
+  .vs[hidden] { display: none; }
+  .vs.win  { background: var(--green); color: var(--green-ink); }
+  .vs.lose { background: var(--red); color: var(--red-ink); }
+  .vs.tie  { background: var(--lumpy); color: #FFFFFF; }
+  .vs small { font-weight: 500; opacity: 0.9; }
+
+  .foot { color: var(--ink-soft); font-size: 13px; max-width: 80ch; font-weight: 500; background: color-mix(in srgb, var(--card) 80%, transparent); border-radius: 14px; padding: 12px 16px; border: 2px solid color-mix(in srgb, var(--outline) 35%, transparent); }
+  .foot p { margin: 0 0 6px; }
+  .foot p:last-child { margin-bottom: 0; }
+  .foot b { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="cloud a" aria-hidden="true"></div>
+<div class="cloud b" aria-hidden="true"></div>
+
+<div class="app">
+  <header class="top">
+    <div>
+      <span class="eyebrow">Adventure Time edition</span>
+      <h1>Munchkin <em>Calculator</em></h1>
+      <p class="tagline"><b>Combat strength</b> = Level + Gear + Allies + Character + Class + One‑shots − Curses. Beat the monster to win the fight. First munchkin to <b>Level 10</b> wins the Land of Ooo.</p>
+    </div>
+    <div class="controls">
+      <div class="count" role="group" aria-label="Number of players">
+        <span class="lbl">Players</span>
+        <button class="step minus" id="players-minus" aria-label="Remove a player">−</button>
+        <span class="val" id="players-count">4</span>
+        <button class="step plus" id="players-plus" aria-label="Add a player">+</button>
+      </div>
+      <button class="btn jake" id="end-battle" title="Clear the monsters and every player's one-shot bonuses">End battle</button>
+      <button class="btn red" id="new-game" title="Everyone back to Level 1 with every category emptied">New game</button>
+    </div>
+  </header>
+
+  <section class="fight" aria-label="The fight">
+    <div class="fight-head">
+      <div>
+        <span class="sec-title">The fight</span>
+        <div class="sub">Monster level + modifiers from enhancer cards. Ties go to the monster.</div>
+      </div>
+      <div class="fight-total"><span class="lbl">Monster strength</span><span class="num" id="monster-total">0</span></div>
+    </div>
+    <div class="monsters" id="monsters"></div>
+    <div class="fight-actions">
+      <button class="btn small jake" id="add-monster">+ Monster</button>
+      <button class="btn small" id="clear-monsters">Clear monsters</button>
+    </div>
+  </section>
+
+  <main class="grid" id="players"></main>
+
+  <footer class="foot">
+    <p><b>Gear</b> — one Headgear, one Armor, one Footgear, two hands (tick <em>2‑handed</em> and the second hand is ignored), plus any number of no‑slot <b>Misc</b> items. Type the card's name if you like and set the bonus from the card. Misc items have an <b>On/Off</b> switch for cards that only work under a condition — flip it off and the bonus stays on the card but drops out of the total.</p>
+    <p><b>Allies</b> are the Door cards that fight beside you — Royalty can keep more than one. <b>Character</b> is your character card's power when it applies this fight (Finn: +2 vs. Level 10+ monsters). <b>Class</b> bonus is what Wizard / Royalty / Hero / Musician adds this fight. <b>Curses</b> are subtracted. <b>One‑shots</b> are potions and snacks for this fight only.</p>
+    <p><b>The fight</b> — add the monster, set its level and any modifier from enhancer cards or the card's own text; use <em>+ Monster</em> for extra monsters. Every player card then shows whether they beat the combined monster strength. <em>End battle</em> clears the monsters and everyone's one‑shots.</p>
+    <p>Your table is saved in this browser, so you can close the page mid-game and come back.</p>
+  </footer>
+</div>
+
+
+<script>
+(function () {
+  const MAX_PLAYERS = 6, MIN_PLAYERS = 2, MAX_LEVEL = 10, MIN_LEVEL = 1;
+  const STORE_KEY = 'munchkin-calculator-at-v3';
+
+  const CLASSES = {
+    '':         { label: 'No class', note: '' },
+    'Wizard':   { label: 'Wizard',   note: 'Can use Wizard-only items' },
+    'Royalty':  { label: 'Royalty',  note: 'Gets stronger with each Ally · may keep more than one Ally' },
+    'Hero':     { label: 'Hero',     note: 'Bonus when helping another player in a fight' },
+    'Musician': { label: 'Musician', note: 'Can use instruments' }
+  };
+  const CHARACTERS = {
+    '':          { label: 'No character', note: '' },
+    'Finn':      { label: 'Finn / Fionna',                         note: '+2 against monsters of Level 10 or higher' },
+    'Jake':      { label: 'Jake / Cake',                           note: 'See the character card for the power' },
+    'Marceline': { label: 'Marceline / Marshall Lee',              note: '+2 vs. monsters with red on them · +2 with an instrument equipped' },
+    'PB':        { label: 'Princess Bubblegum / Prince Gumball',   note: 'See the character card for the power' },
+    'Flame':     { label: 'Flame Princess / Flame Prince',         note: 'See the character card for the power' },
+    'Rainicorn': { label: 'Lady Rainicorn / Lord Monochromicorn',  note: 'Draw a Door or Treasure when Looting the Room' },
+    'LSP':       { label: 'Lumpy Space Princess / Prince',         note: '+2 when fighting a monster alone' },
+    'BMO':       { label: 'BMO',                                   note: 'Ignores all gender-related stuff' }
+  };
+  const SLOTS = [
+    { key: 'head',  label: 'Headgear' },
+    { key: 'armor', label: 'Armor' },
+    { key: 'foot',  label: 'Footgear' },
+    { key: 'w1',    label: 'Hand 1' },
+    { key: 'w2',    label: 'Hand 2' }
+  ];
+
+  const defaultNames = ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5', 'Player 6'];
+  const item = (name = '', b = 0) => ({ name, b });
+  const freshPlayer = (i, name) => ({
+    name: name || defaultNames[i], level: 1,
+    character: '', charBonus: 0,
+    cls: '', cls2: '', superMunchkin: false, clsBonus: 0,
+    gear: { head: item(), armor: item(), foot: item(), w1: item(), w2: item() }, twoHanded: false,
+    misc: [], allies: [], curses: [],
+    oneShot: 0, oneShotName: ''
+  });
+
+  // Sample table so the page shows what it does before anyone taps a button.
+  function sampleState() {
+    const p = [0, 1, 2, 3, 4, 5].map(i => freshPlayer(i));
+    Object.assign(p[0], { level: 4, character: 'Finn', cls: 'Hero' });
+    p[0].gear.w1 = item('', 3);
+    p[0].gear.head = item('', 1);
+    p[0].gear.foot = item('', 2);
+    Object.assign(p[1], { level: 6, character: 'Marceline', charBonus: 2, cls: 'Musician', superMunchkin: true, cls2: 'Hero', oneShot: 2 });
+    p[1].gear.w1 = item('', 4);
+    p[1].twoHanded = true;
+    p[1].gear.armor = item('', 1);
+    p[1].curses.push(item('', 1));
+    Object.assign(p[2], { level: 2, character: 'PB', cls: 'Royalty', clsBonus: 1 });
+    p[2].gear.head = item('', 2);
+    p[2].gear.w1 = item('', 3);
+    p[2].allies.push(item('', 2), item('', 1));
+    Object.assign(p[3], { level: 5, character: 'BMO', cls: 'Wizard' });
+    p[3].gear.armor = item('', 3);
+    p[3].gear.w1 = item('', 2);
+    p[3].misc.push(item('', 2), Object.assign(item('', 3), { off: true }));
+    return { count: 4, players: p, monsters: [monster('', 4, 8)] };
+  }
+  const monster = (name = '', level = 1, mod = 0, modNote = '') => ({ name, level, mod, modNote });
+  const monsterStrength = (m) => m.level + m.mod;
+  const monstersTotal = () => state.monsters.reduce((t, m) => t + monsterStrength(m), 0);
+
+  let state;
+
+  function load(fallback) {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s && Array.isArray(s.players) && s.players.length === 6 && s.players[0].gear && Array.isArray(s.players[0].curses)) {
+          if (!Array.isArray(s.monsters)) s.monsters = [];
+          return s;
+        }
+      }
+    } catch (e) { /* storage unavailable */ }
+    return fallback;
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const signed = (n) => (n > 0 ? '+' : '') + n;
+  const sum = (arr) => arr.reduce((t, x) => t + x.b, 0);
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function gearTotal(p) {
+    let t = 0;
+    for (const s of SLOTS) {
+      if (s.key === 'w2' && p.twoHanded) continue;
+      t += p.gear[s.key].b;
+    }
+    return t + sum(p.misc.filter(m => !m.off));
+  }
+  const curseTotal = (p) => sum(p.curses);
+  const charBonus = (p) => (p.charOff ? 0 : p.charBonus);
+  const strength = (p) => p.level + gearTotal(p) + sum(p.allies) + charBonus(p) + p.clsBonus + p.oneShot - curseTotal(p);
+
+  const grid = document.getElementById('players');
+  const countEl = document.getElementById('players-count');
+
+  function stepper(field, idx, min, max) {
+    const d = idx === undefined ? '' : ` data-idx="${idx}"`;
+    return `<span class="stepper">
+      <button class="step minus" data-f="${field}"${d} data-d="-1" data-min="${min}" data-max="${max}" aria-label="${field} down">−</button>
+      <span class="v" data-v="${field}"${d}>0</span>
+      <button class="step plus" data-f="${field}"${d} data-d="1" data-min="${min}" data-max="${max}" aria-label="${field} up">+</button>
+    </span>`;
+  }
+  const options = (map, cur) => Object.entries(map).map(([v, c]) =>
+    `<option value="${v}" ${cur === v ? 'selected' : ''}>${c.label}</option>`).join('');
+
+  function listRow(kind, label, slotText, k, entry, i, min, max, toggle = false) {
+    const off = toggle && entry.off;
+    return `
+      <div class="row${off ? ' off' : ''}" data-kind="${kind}" data-idx="${k}">
+        <span class="k">${label} ${slotText ? `<span class="slot">${slotText}</span>` : ''}
+          ${toggle ? `<label class="sw" title="Counts this fight? Untick when the item's condition isn't met.">
+            <input type="checkbox" id="${kind}-on-${k}-${i}" data-toggle="${kind}" data-idx="${k}" ${off ? '' : 'checked'} aria-label="${label} active">
+            <span class="sw-track"></span><span class="sw-lbl">${off ? 'Off' : 'On'}</span>
+          </label>` : ''}
+          <button class="x" data-remove="${kind}" data-idx="${k}" aria-label="Remove ${label}">×</button>
+        </span>
+        ${stepper(kind, k, min, max)}
+        <input class="txt" id="${kind}-${k}-${i}" type="text" maxlength="60" placeholder="${label} name" autocomplete="off"
+               data-t="${kind}" data-idx="${k}" value="${esc(entry.name)}" aria-label="${label} name">
+      </div>`;
+  }
+
+  function cardHTML(i) {
+    const p = state.players[i];
+    const slotRows = SLOTS.map(s => `
+      <div class="row gear-row" data-slot="${s.key}">
+        <span class="k">${s.label}
+          ${s.key === 'w1' ? `<label class="chk"><input type="checkbox" id="twoh-${i}" data-f="twoHanded" ${p.twoHanded ? 'checked' : ''}> 2‑handed</label>` : ''}
+        </span>
+        ${stepper('gear', s.key, 0, 30)}
+        <input class="txt" id="gear-${s.key}-${i}" type="text" maxlength="60" placeholder="empty slot" autocomplete="off"
+               data-t="gear" data-idx="${s.key}" value="${esc(p.gear[s.key].name)}" aria-label="${s.label} item name">
+      </div>`).join('');
+
+    const miscRows = p.misc.map((m, k) => listRow('misc', 'Misc', 'no slot', k, m, i, 0, 30, true)).join('');
+    const allyRows = p.allies.map((a, k) => listRow('allies', 'Ally', '', k, a, i, 0, 30)).join('');
+
+    const curseRows = p.curses.map((c, k) => listRow('curses', 'Curse!', 'subtracted', k, c, i, 0, 30)).join('');
+
+    return `
+      <article class="card" data-i="${i}">
+        <header class="card-head">
+          <input class="name" id="name-${i}" type="text" maxlength="18" placeholder="Name" autocomplete="off" value="${esc(p.name)}" aria-label="Player ${i + 1} name">
+          <span class="pill" hidden></span>
+        </header>
+
+        <div class="total">
+          <span class="lbl">Combat strength</span>
+          <span class="num" id="total-${i}">0</span>
+        </div>
+        <div class="breakdown" id="breakdown-${i}"></div>
+        <div class="vs" data-vs hidden></div>
+
+        <div class="sec">
+          <div class="row level single">
+            <span class="k">Level <small>1 to 10</small></span>
+            ${stepper('level', undefined, MIN_LEVEL, MAX_LEVEL)}
+          </div>
+        </div>
+        <div class="level-track" aria-hidden="true">${'<i></i>'.repeat(MAX_LEVEL)}</div>
+
+        <div class="sec">
+          <div class="sec-head"><span class="sec-title">Character</span><span class="sec-sum" data-sum="char"></span></div>
+          <div class="row${p.charOff ? ' off' : ''}">
+            <span class="k">Character <span class="slot">power this fight</span>
+              <label class="sw" title="Does the power apply this fight?">
+                <input type="checkbox" id="char-on-${i}" data-f="charOff" ${p.charOff ? '' : 'checked'} aria-label="Character power active">
+                <span class="sw-track"></span><span class="sw-lbl">${p.charOff ? 'Off' : 'On'}</span>
+              </label>
+            </span>
+            ${stepper('charBonus', undefined, -20, 20)}
+            <select class="sel" id="character-${i}" data-f="character" aria-label="Character">${options(CHARACTERS, p.character)}</select>
+            <span class="note" data-note="character"></span>
+          </div>
+          <div class="row">
+            <span class="k">Class <span class="slot">bonus this fight</span>
+              <label class="chk"><input type="checkbox" id="super-${i}" data-f="superMunchkin" ${p.superMunchkin ? 'checked' : ''}> Super Munchkin</label>
+            </span>
+            ${stepper('clsBonus', undefined, 0, 20)}
+            <select class="sel" id="class-${i}" data-f="cls" aria-label="Class">${options(CLASSES, p.cls)}</select>
+            <span class="note" data-note="cls"></span>
+            <select class="sel" id="class2-${i}" data-f="cls2" aria-label="Second class" ${p.superMunchkin ? '' : 'hidden'}>${options(CLASSES, p.cls2).replace('>No class<', '>Second class…<')}</select>
+            <span class="note" data-note="cls2"></span>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-head"><span class="sec-title">Gear</span><span class="sec-sum" data-sum="gear"></span></div>
+          ${slotRows}
+          ${miscRows}
+          <div class="row single" style="border-top:0; padding-top:10px">
+            <span class="k"></span>
+            <button class="btn small" data-add="misc">+ Misc item</button>
+          </div>
+        </div>
+
+        <div class="sec allies">
+          <div class="sec-head"><span class="sec-title">Allies</span><span class="sec-sum" data-sum="allies"></span></div>
+          ${allyRows}
+          <div class="row single" style="border-top:0; padding-top:${p.allies.length ? 10 : 2}px">
+            <span class="k"></span>
+            <button class="btn small" data-add="allies">+ Ally</button>
+          </div>
+        </div>
+
+        <div class="sec curses">
+          <div class="sec-head"><span class="sec-title">Curses</span><span class="sec-sum" data-sum="curse"></span></div>
+          ${curseRows}
+          <div class="row single" style="border-top:0; padding-top:${p.curses.length ? 10 : 2}px">
+            <span class="k"></span>
+            <button class="btn small" data-add="curses">+ Curse</button>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="row">
+            <span class="k">One‑shots <small>this fight only</small></span>
+            ${stepper('oneShot', undefined, -30, 30)}
+            <input class="txt" id="oneshot-${i}" type="text" maxlength="80" placeholder="which cards" autocomplete="off"
+                   data-t="oneShotName" value="${esc(p.oneShotName)}" aria-label="One-shot cards used">
+          </div>
+        </div>
+      </article>`;
+  }
+
+  // ---------- The fight ----------
+  const monstersEl = document.getElementById('monsters');
+  const monsterTotalEl = document.getElementById('monster-total');
+
+  function monsterHTML(m, k) {
+    return `
+      <div class="monster" data-k="${k}">
+        <div class="who">
+          <span class="k">Monster ${state.monsters.length > 1 ? k + 1 : ''}
+            <button class="x" data-remove-monster="${k}" aria-label="Remove monster">×</button>
+          </span>
+          <input class="txt" id="monster-name-${k}" type="text" maxlength="60" placeholder="Monster name" autocomplete="off"
+                 data-m="name" value="${esc(m.name)}" aria-label="Monster ${k + 1} name">
+          <input class="txt" id="monster-mod-note-${k}" type="text" maxlength="80" placeholder="Modifier from… (enhancer card, card text)" autocomplete="off"
+                 data-m="modNote" value="${esc(m.modNote)}" aria-label="Monster ${k + 1} modifier source">
+        </div>
+        <div class="part"><span class="lbl">Level</span>${stepper('mlevel', k, 1, 30)}</div>
+        <div class="part"><span class="lbl">Modifier</span>${stepper('mmod', k, -30, 30)}</div>
+        <div class="part total"><span class="lbl">Strength</span><span class="mtotal" data-mtotal>0</span></div>
+      </div>`;
+  }
+  function renderFight() {
+    monstersEl.innerHTML = state.monsters.length
+      ? state.monsters.map(monsterHTML).join('')
+      : '<div class="monsters-empty">No monster on the table. Add one to see who beats it.</div>';
+    updateFight();
+  }
+  function updateFight() {
+    state.monsters.forEach((m, k) => {
+      const row = monstersEl.querySelector(`.monster[data-k="${k}"]`);
+      row.querySelector('[data-v="mlevel"]').textContent = m.level;
+      row.querySelector('[data-v="mmod"]').textContent = signed(m.mod);
+      row.querySelector('[data-mtotal]').textContent = monsterStrength(m);
+      row.querySelectorAll('button[data-f][data-d]').forEach(b => {
+        const val = b.dataset.f === 'mlevel' ? m.level : m.mod, d = Number(b.dataset.d);
+        b.disabled = d < 0 ? val <= Number(b.dataset.min) : val >= Number(b.dataset.max);
+      });
+    });
+    monsterTotalEl.textContent = state.monsters.length ? monstersTotal() : '—';
+  }
+
+  monstersEl.addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-remove-monster]');
+    if (rm) { state.monsters.splice(Number(rm.dataset.removeMonster), 1); renderFight(); update(); return; }
+    const btn = e.target.closest('button[data-f][data-d]');
+    if (!btn) return;
+    const m = state.monsters[Number(btn.dataset.idx)];
+    const d = Number(btn.dataset.d), min = Number(btn.dataset.min), max = Number(btn.dataset.max);
+    if (btn.dataset.f === 'mlevel') m.level = clamp(m.level + d, min, max);
+    else m.mod = clamp(m.mod + d, min, max);
+    updateFight(); update();
+  });
+  monstersEl.addEventListener('input', (e) => {
+    const row = e.target.closest('.monster');
+    if (!row) return;
+    const m = state.monsters[Number(row.dataset.k)];
+    m[e.target.dataset.m] = e.target.value;
+    save();
+  });
+  document.getElementById('add-monster').addEventListener('click', () => {
+    state.monsters.push(monster());
+    renderFight(); update();
+    document.getElementById(`monster-name-${state.monsters.length - 1}`)?.focus();
+  });
+  document.getElementById('clear-monsters').addEventListener('click', () => {
+    state.monsters = [];
+    renderFight(); update();
+  });
+
+  function render() {
+    renderFight();
+    grid.innerHTML = state.players.slice(0, state.count).map((_, i) => cardHTML(i)).join('');
+    countEl.textContent = state.count;
+    document.getElementById('players-minus').disabled = state.count <= MIN_PLAYERS;
+    document.getElementById('players-plus').disabled = state.count >= MAX_PLAYERS;
+    update();
+  }
+  function renderCard(i) {
+    const old = grid.querySelector(`.card[data-i="${i}"]`);
+    const tmp = document.createElement('div');
+    tmp.innerHTML = cardHTML(i);
+    old.replaceWith(tmp.firstElementChild);
+    update();
+  }
+
+  function valueOf(p, f, idx) {
+    if (f === 'gear') return p.gear[idx].b;
+    if (f === 'misc' || f === 'allies' || f === 'curses') return p[f][idx].b;
+    return p[f];
+  }
+
+  function update(bumpIndex) {
+    const active = state.players.slice(0, state.count);
+    const best = Math.max(...active.map(strength));
+    const leaders = active.filter(p => strength(p) === best).length;
+
+    grid.querySelectorAll('.card').forEach((card, i) => {
+      const p = state.players[i];
+      const total = strength(p);
+      const won = p.level >= MAX_LEVEL;
+      const gear = gearTotal(p), allies = sum(p.allies), curse = curseTotal(p);
+
+      const num = card.querySelector('.num');
+      num.textContent = total;
+      if (bumpIndex === i) { num.classList.remove('bump'); void num.offsetWidth; num.classList.add('bump'); }
+
+      const parts = [`<span>Level <b>${p.level}</b></span>`, `<span>Gear <b>${signed(gear)}</b></span>`];
+      if (allies) parts.push(`<span>Allies <b>${signed(allies)}</b></span>`);
+      if (charBonus(p)) parts.push(`<span>${(CHARACTERS[p.character] || CHARACTERS['']).label.split(' /')[0] || 'Character'} <b>${signed(p.charBonus)}</b></span>`);
+      if (p.clsBonus) {
+        const names = [p.cls, p.superMunchkin ? p.cls2 : ''].filter(Boolean).join(' + ') || 'Class';
+        parts.push(`<span>${esc(names)} <b>${signed(p.clsBonus)}</b></span>`);
+      }
+      if (p.oneShot) parts.push(`<span>One‑shots <b>${signed(p.oneShot)}</b></span>`);
+      if (curse) parts.push(`<span class="neg">Curses <b>−${curse}</b></span>`);
+      card.querySelector('.breakdown').innerHTML = parts.join('');
+
+      // verdict against the monsters on the table
+      const vs = card.querySelector('[data-vs]');
+      if (state.monsters.length) {
+        const mt = monstersTotal(), diff = total - mt;
+        const label = state.monsters.length > 1 ? `${state.monsters.length} monsters` : (state.monsters[0].name || 'the monster');
+        vs.hidden = false;
+        vs.classList.remove('win', 'lose', 'tie');
+        if (diff > 0) { vs.classList.add('win');  vs.innerHTML = `<span>Beats ${esc(label)}</span><small>by ${diff}</small>`; }
+        else if (diff < 0) { vs.classList.add('lose'); vs.innerHTML = `<span>Loses to ${esc(label)}</span><small>needs ${-diff + 1} more</small>`; }
+        else { vs.classList.add('tie'); vs.innerHTML = `<span>Tie with ${esc(label)}</span><small>monster wins — needs 1 more</small>`; }
+      } else {
+        vs.hidden = true;
+      }
+
+      card.querySelectorAll('[data-v]').forEach(v => {
+        const f = v.dataset.v, val = valueOf(p, f, v.dataset.idx);
+        v.textContent = f === 'level' ? val : (f === 'curses' ? (val ? '−' + val : '0') : signed(val));
+      });
+      card.querySelectorAll('button[data-f][data-d]').forEach(b => {
+        const val = valueOf(p, b.dataset.f, b.dataset.idx), d = Number(b.dataset.d);
+        b.disabled = d < 0 ? val <= Number(b.dataset.min) : val >= Number(b.dataset.max);
+      });
+
+      const w2 = card.querySelector('.gear-row[data-slot="w2"]');
+      w2.classList.toggle('off', p.twoHanded);
+      w2.querySelectorAll('button, input').forEach(el => { el.disabled = p.twoHanded; });
+
+      card.querySelector('.row.level').classList.toggle('max', won);
+      card.querySelectorAll('.level-track i').forEach((seg, k) => seg.classList.toggle('on', k < p.level));
+
+      card.querySelector('[data-sum="gear"]').textContent = signed(gear);
+      card.querySelector('[data-sum="allies"]').textContent = signed(allies);
+      card.querySelector('[data-sum="char"]').textContent = signed(charBonus(p) + p.clsBonus);
+      const cs = card.querySelector('[data-sum="curse"]');
+      cs.textContent = curse ? '−' + curse : '0';
+      cs.classList.toggle('neg', curse > 0);
+      card.querySelector('[data-note="character"]').textContent = (CHARACTERS[p.character] || CHARACTERS['']).note;
+      card.querySelector('[data-note="cls"]').textContent = (CLASSES[p.cls] || CLASSES['']).note;
+      const cls2 = card.querySelector('[data-f="cls2"]');
+      cls2.hidden = !p.superMunchkin;
+      card.querySelector('[data-note="cls2"]').textContent = p.superMunchkin ? (CLASSES[p.cls2] || CLASSES['']).note : '';
+
+      const pill = card.querySelector('.pill');
+      const isLeader = total === best && leaders === 1 && active.length > 1;
+      card.classList.toggle('winner', won);
+      card.classList.toggle('leader', !won && isLeader);
+      if (won) { pill.textContent = 'Level 10 — Mathematical!'; pill.hidden = false; }
+      else if (isLeader) { pill.textContent = 'Strongest'; pill.hidden = false; }
+      else { pill.hidden = true; }
+    });
+    save();
+  }
+
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const i = Number(card.dataset.i);
+    const p = state.players[i];
+
+    const add = e.target.closest('[data-add]');
+    if (add) {
+      const kind = add.dataset.add;
+      p[kind].push(kind === 'curses' ? item('', 1) : item());
+      renderCard(i);
+      grid.querySelector(`#${kind}-${p[kind].length - 1}-${i}`)?.focus();
+      return;
+    }
+    const rm = e.target.closest('[data-remove]');
+    if (rm) { p[rm.dataset.remove].splice(Number(rm.dataset.idx), 1); renderCard(i); return; }
+
+    const btn = e.target.closest('button[data-f][data-d]');
+    if (!btn) return;
+    const f = btn.dataset.f, idx = btn.dataset.idx, d = Number(btn.dataset.d);
+    const min = Number(btn.dataset.min), max = Number(btn.dataset.max);
+    if (f === 'gear') p.gear[idx].b = clamp(p.gear[idx].b + d, min, max);
+    else if (f === 'misc' || f === 'allies' || f === 'curses') p[f][idx].b = clamp(p[f][idx].b + d, min, max);
+    else p[f] = clamp(p[f] + d, min, max);
+    update(i);
+  });
+
+  grid.addEventListener('input', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const p = state.players[Number(card.dataset.i)];
+    const t = e.target;
+    if (t.classList.contains('name')) { p.name = t.value; save(); return; }
+    if (t.dataset.t === 'gear') { p.gear[t.dataset.idx].name = t.value; save(); return; }
+    if (t.dataset.t === 'misc' || t.dataset.t === 'allies' || t.dataset.t === 'curses') { p[t.dataset.t][t.dataset.idx].name = t.value; save(); return; }
+    if (t.dataset.t === 'oneShotName') { p.oneShotName = t.value; save(); }
+  });
+
+  grid.addEventListener('change', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const i = Number(card.dataset.i), p = state.players[i];
+    const t = e.target;
+    if (t.dataset.toggle) {
+      const entry = p[t.dataset.toggle][Number(t.dataset.idx)];
+      entry.off = !t.checked;
+      const row = t.closest('.row');
+      row.classList.toggle('off', entry.off);
+      row.querySelector('.sw-lbl').textContent = entry.off ? 'Off' : 'On';
+      update(i);
+    }
+    else if (t.dataset.f === 'charOff') {
+      p.charOff = !t.checked;
+      const row = t.closest('.row');
+      row.classList.toggle('off', p.charOff);
+      row.querySelector('.sw-lbl').textContent = p.charOff ? 'Off' : 'On';
+      update(i);
+    }
+    else if (t.dataset.f === 'twoHanded') { p.twoHanded = t.checked; update(i); }
+    else if (t.dataset.f === 'cls') { p.cls = t.value; update(i); }
+    else if (t.dataset.f === 'cls2') { p.cls2 = t.value; update(i); }
+    else if (t.dataset.f === 'superMunchkin') { p.superMunchkin = t.checked; if (!t.checked) p.cls2 = ''; renderCard(i); }
+    else if (t.dataset.f === 'character') { p.character = t.value; update(i); }
+  });
+
+  document.getElementById('players-plus').addEventListener('click', () => {
+    if (state.count < MAX_PLAYERS) { state.count++; render(); }
+  });
+  document.getElementById('players-minus').addEventListener('click', () => {
+    if (state.count > MIN_PLAYERS) { state.count--; render(); }
+  });
+  document.getElementById('end-battle').addEventListener('click', () => {
+    state.players.forEach(p => { p.oneShot = 0; p.oneShotName = ''; });
+    state.monsters = [];
+    render();
+  });
+  // Two-tap confirm: the sandbox blocks confirm() dialogs, so the button itself asks.
+  const newGameBtn = document.getElementById('new-game');
+  let armTimer = null;
+  function disarmNewGame() {
+    clearTimeout(armTimer); armTimer = null;
+    newGameBtn.classList.remove('armed');
+    newGameBtn.textContent = 'New game';
+  }
+  newGameBtn.addEventListener('click', () => {
+    if (!newGameBtn.classList.contains('armed')) {
+      newGameBtn.classList.add('armed');
+      newGameBtn.textContent = 'Tap again to reset everything';
+      armTimer = setTimeout(disarmNewGame, 4000);
+      return;
+    }
+    disarmNewGame();
+    state.players = state.players.map((_, i) => freshPlayer(i));
+    state.monsters = [];
+    render();
+  });
+  newGameBtn.addEventListener('blur', disarmNewGame);
+
+  function start() {
+    state = load(sampleState());
+    render();
+  }
+  start();
+})();
+</script>
+
+</body>
+</html>
